@@ -22,9 +22,11 @@ struct ContentView: View {
     @State private var score = 0
     @State private var countries = ["Estonia", "France", "Germany", "Ireland", "Italy", "Nigeria", "Poland", "Russia", "Spain", "UK", "US"].shuffled()
     @State private var correctAnswer = Int.random(in: 0...2)
+    @State private var clickedFlag = 0
 
     @State private var animationAmount = 0.0
     @State private var opacityAmount = 1.0
+    @State private var shakeAmount: CGFloat = 0.0
     @State private var showingScore = false
     @State private var scoreTitle = ""
     @State private var scoreMessage = ""
@@ -45,19 +47,25 @@ struct ContentView: View {
                 }
 
                 ForEach(0 ..< 3 ) { number in
+                    let isRight = number == correctAnswer
                     Button(action: {
-                            withAnimation(.easeInOut) {
+                                clickedFlag = number
                         if self.flagTapped(number) {
-                            animationAmount += 360
-                            opacityAmount = 0.25
+                            withAnimation(.easeInOut) {
+                                animationAmount += 360
+                                opacityAmount = 0.25
+                            }
                         } else {
-                            animationAmount = 0
+                            withAnimation(Animation.default.repeatCount(2).speed(8)) {
+                                shakeAmount = 10.0
+                            }
                         }
-                        }}) {
+                        }) {
                         FlagImage(imgName: self.countries[number])
                     }
-                    .rotation3DEffect(.degrees(number == correctAnswer ? animationAmount : 0), axis: (x: 0, y: 1, z: 0))
-                    .opacity(number != correctAnswer ? opacityAmount : 1)
+                    .rotation3DEffect(.degrees(isRight ? animationAmount : 0), axis: (x: 0, y: 1, z: 0))
+                    .opacity(isRight ? 1 : opacityAmount)
+                    .offset(x: !isRight && clickedFlag == number ? shakeAmount : 0.0)
                 }
 
                 Text("Total score: \(score)")
@@ -89,6 +97,8 @@ struct ContentView: View {
         countries = countries.shuffled()
         correctAnswer = Int.random(in: 0...2)
         opacityAmount = 1
+        shakeAmount = 0
+        animationAmount = 0
     }
 }
 
